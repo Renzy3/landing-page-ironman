@@ -1,18 +1,20 @@
 import { useState } from 'react';
-import { ChevronDown, Menu, X, ShoppingBag } from 'lucide-react';
+import { ChevronDown, Menu, X, User } from 'lucide-react'; // Swapped ShoppingBag to User icon for a profile feel
 import { motion, AnimatePresence } from 'framer-motion';
 
 export function Navbar() {
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const [activeDropdown, setActiveDropdown] = useState(null);
 
-  const navItems = ['Games', 'News', 'Blog', 'Services'];
+  // Re-themed navbar categories for a professional developer profile
+  const navItems = ['Projects', 'About', 'Tech Stack', 'Contact'];
 
+  // Clean, high-tech content mapping for your project categories and portfolio data
   const dropdownContent = {
-    Games: ['Iron Man: Stark Tech', 'Armor Customizer', 'Vault Access', 'Legacy mode'],
-    News: ['Stark Updates', 'Patch Notes', 'Press Releases', 'Media Kit'],
-    Blog: ['Dev Insights', 'Design Team', 'Technical Specs', 'Archives'],
-    Services: ['Arc Grid', 'Stark Profile', 'Support Hub', 'API Portal'],
+    Projects: ['Web & Mobile Apps', 'Full-Stack Systems', 'API Integrations', 'Open Source'],
+    About: ['Developer Profile', 'Academic Background', 'Certifications', 'Experience'],
+    'Tech Stack': ['Frontend Engine', 'Backend Systems', 'Database Architecture', 'DevOps Tools'],
+    Contact: ['Secure Channel', 'GitHub Vault', 'LinkedIn Node', 'Encrypted Email'],
   };
 
   const toggleDropdown = (item) => {
@@ -53,25 +55,25 @@ export function Navbar() {
         >
           {/* Outer Heavy Circular Reactor Shell */}
           <circle cx="32" cy="32" r="28" stroke="#00f0ff" strokeWidth="2" opacity="0.9" />
-          
+
           {/* Inner ring mechanical segments */}
           <circle cx="32" cy="32" r="23" stroke="#00f0ff" strokeWidth="1" strokeDasharray="3, 2" opacity="0.6" />
-          
+
           {/* Concentric brass/gold accent ring */}
           <circle cx="32" cy="32" r="8" stroke="#d4af37" strokeWidth="1" opacity="0.5" />
-          
-          {/* Inverted Triangular Reactor Energy Slots (Matches Tony Stark Core exactly) */}
+
+          {/* Inverted Triangular Reactor Energy Slots */}
           <polygon points="18,20 46,20 32,44" stroke="#00f0ff" strokeWidth="2.5" strokeLinejoin="round" opacity="0.95" />
           <polygon points="22,22 42,22 32,39" stroke="#00f0ff" strokeWidth="1.2" strokeLinejoin="round" opacity="0.8" />
-          
+
           {/* Central Triangular Core Node */}
           <polygon points="27,24 37,24 32,33" fill="#00f0ff" stroke="#00f0ff" strokeWidth="0.8" opacity="0.95" />
-          
+
           {/* Gold Heavy Coupling Spokes */}
           <line x1="18" y1="20" x2="10" y2="12" stroke="#d4af37" strokeWidth="2.2" opacity="0.9" />
           <line x1="46" y1="20" x2="54" y2="12" stroke="#d4af37" strokeWidth="2.2" opacity="0.9" />
           <line x1="32" y1="44" x2="32" y2="58" stroke="#d4af37" strokeWidth="2.2" opacity="0.9" />
-          
+
           {/* Core White Light Emitter */}
           <circle cx="32" cy="32" r="3.5" fill="#ffffff" />
         </svg>
@@ -106,7 +108,7 @@ export function Navbar() {
                   animate={{ opacity: 1, y: 0 }}
                   exit={{ opacity: 0, y: 5 }}
                   transition={{ duration: 0.2 }}
-                  className="absolute top-full left-1/2 -translate-x-1/2 mt-1 w-48 rounded-xl overflow-hidden glass-panel border border-white/10 shadow-2xl z-50 p-2 bg-black/60 backdrop-blur-md"
+                  className="absolute top-full left-1/2 -translate-x-1/2 mt-1 w-52 rounded-xl overflow-hidden border border-white/10 shadow-2xl z-50 p-2 bg-black/60 backdrop-blur-md"
                 >
                   {dropdownContent[item].map((subItem) => (
                     <a
@@ -126,7 +128,7 @@ export function Navbar() {
 
       {/* Right Actions — Far Right */}
       <div className="flex items-center space-x-4 lg:space-x-6">
-        {/* Store Profile Button */}
+        {/* Profile Button — Updated to VIEW CV / RESUME vibe */}
         <motion.a
           href="#"
           className="hidden sm:flex items-center gap-2 rounded-full px-6 py-2.5 font-bold uppercase tracking-wider text-[11px] bg-white text-black shadow-lg cursor-pointer hover:bg-arc-cyan hover:text-black transition-colors duration-300 font-orbitron"
@@ -138,7 +140,7 @@ export function Navbar() {
           transition={{ type: 'spring', stiffness: 400, damping: 15 }}
         >
           <motion.span
-            animate={{ rotate: [0, -10, 10, 0] }}
+            animate={{ scale: [1, 1.15, 1] }}
             transition={{
               duration: 2,
               repeat: Infinity,
@@ -146,9 +148,9 @@ export function Navbar() {
               repeatDelay: 3,
             }}
           >
-            <ShoppingBag className="w-3.5 h-3.5" />
+            <User className="w-3.5 h-3.5" />
           </motion.span>
-          STARK PROFILE
+          VIEW RESUME
         </motion.a>
 
         {/* Mobile Hamburger */}
@@ -172,7 +174,7 @@ export function Navbar() {
             initial={{ opacity: 0, y: -20 }}
             animate={{ opacity: 1, y: 0 }}
             exit={{ opacity: 0, y: -10 }}
-            className="absolute top-20 left-0 right-0 z-50 glass-panel rounded-2xl p-6 md:hidden bg-black/80 backdrop-blur-xl border border-white/10 shadow-2xl"
+            className="absolute top-20 left-0 right-0 z-50 rounded-2xl p-6 md:hidden bg-black/80 backdrop-blur-xl border border-white/10 shadow-2xl"
           >
             <div className="flex flex-col space-y-3 font-orbitron">
               {navItems.map((item) => (
@@ -203,8 +205,8 @@ export function Navbar() {
                 href="#"
                 className="flex items-center justify-center gap-2 rounded-full px-6 py-3 font-bold uppercase tracking-wider text-xs bg-white text-black w-full mt-4 hover:bg-arc-cyan hover:text-black transition-colors"
               >
-                <ShoppingBag className="w-4 h-4" />
-                STARK PROFILE
+                <User className="w-4 h-4" />
+                VIEW RESUME
               </a>
             </div>
           </motion.div>
