@@ -42,17 +42,38 @@ export function Navbar() {
         }}
         whileTap={{ scale: 0.95 }}
       >
-        {/* Stark Industries Hexagonal Logo Icon */}
+        {/* Stark Industries Arc Reactor Core Logo Icon */}
         <svg
           xmlns="http://www.w3.org/2000/svg"
           viewBox="0 0 64 64"
-          className="w-10 h-10 md:w-11 md:h-11 fill-white transition-all duration-300 group-hover:drop-shadow-[0_0_8px_rgba(0,240,255,0.8)]"
+          className="w-10 h-10 md:w-11 md:h-11 fill-none stroke-arc-cyan transition-all duration-500 group-hover:rotate-90 group-hover:scale-105"
           style={{
-            filter: 'drop-shadow(0 0 6px rgba(212,175,55,0.4))',
+            filter: 'drop-shadow(0 0 8px rgba(0, 240, 255, 0.9))',
           }}
         >
-          {/* Stark Industries Hex Reactor Shell */}
-          <path d="M32,7c11.589,0,20,8.832,20,21c0,13.135-8.921,29-20,29S12,41.135,12,28C12,15.832,20.411,7,32,7z M29.423,31.474c0.236-0.708-0.084-1.482-0.752-1.816c-2.931-1.466-8.267-5.942-9.061-12.901C17.319,19.67,16,23.53,16,28c0,4.237,1.117,8.91,2.969,13.059C19.609,41.336,20.285,41.5,21,41.5C25.836,41.5,28.865,33.148,29.423,31.474z M45.031,41.059C46.883,36.91,48,32.237,48,28c0-4.47-1.319-8.33-3.61-11.242c-0.794,6.958-6.13,11.435-9.061,12.901c-0.668,0.334-0.988,1.108-0.752,1.816C35.135,33.148,38.164,41.5,43,41.5C43.715,41.5,44.391,41.336,45.031,41.059z" />
+          {/* Outer Heavy Circular Reactor Shell */}
+          <circle cx="32" cy="32" r="28" stroke="#00f0ff" strokeWidth="2" opacity="0.9" />
+          
+          {/* Inner ring mechanical segments */}
+          <circle cx="32" cy="32" r="23" stroke="#00f0ff" strokeWidth="1" strokeDasharray="3, 2" opacity="0.6" />
+          
+          {/* Concentric brass/gold accent ring */}
+          <circle cx="32" cy="32" r="8" stroke="#d4af37" strokeWidth="1" opacity="0.5" />
+          
+          {/* Inverted Triangular Reactor Energy Slots (Matches Tony Stark Core exactly) */}
+          <polygon points="18,20 46,20 32,44" stroke="#00f0ff" strokeWidth="2.5" strokeLinejoin="round" opacity="0.95" />
+          <polygon points="22,22 42,22 32,39" stroke="#00f0ff" strokeWidth="1.2" strokeLinejoin="round" opacity="0.8" />
+          
+          {/* Central Triangular Core Node */}
+          <polygon points="27,24 37,24 32,33" fill="#00f0ff" stroke="#00f0ff" strokeWidth="0.8" opacity="0.95" />
+          
+          {/* Gold Heavy Coupling Spokes */}
+          <line x1="18" y1="20" x2="10" y2="12" stroke="#d4af37" strokeWidth="2.2" opacity="0.9" />
+          <line x1="46" y1="20" x2="54" y2="12" stroke="#d4af37" strokeWidth="2.2" opacity="0.9" />
+          <line x1="32" y1="44" x2="32" y2="58" stroke="#d4af37" strokeWidth="2.2" opacity="0.9" />
+          
+          {/* Core White Light Emitter */}
+          <circle cx="32" cy="32" r="3.5" fill="#ffffff" />
         </svg>
         <div className="ml-2.5 hidden sm:block">
           <div className="font-orbitron text-xs font-black tracking-[0.25em] text-white">STARK</div>
