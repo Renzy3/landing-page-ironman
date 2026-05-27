@@ -1,229 +1,307 @@
-import { useState, useEffect, useRef } from 'react';
-import { cn } from '../lib/utils';
+import { useState, useEffect, useCallback } from 'react';
+import { motion, AnimatePresence } from 'framer-motion';
 
-/* ─────────────────────────────────────────────────────────────────────────────
-   ARC REACTOR SVG
-   A faithful hexagonal Arc Reactor icon in glowing cyan/blue.
-───────────────────────────────────────────────────────────────────────────── */
-function ArcReactorSVG() {
-  return (
-    <svg
-      viewBox="0 0 200 200"
-      width="180"
-      height="180"
-      xmlns="http://www.w3.org/2000/svg"
-      className="reactor-core-glow"
-    >
-      {/* Glow filter */}
-      <defs>
-        <filter id="reactorGlow" x="-50%" y="-50%" width="200%" height="200%">
-          <feGaussianBlur stdDeviation="4" result="blur" />
-          <feMerge>
-            <feMergeNode in="blur" />
-            <feMergeNode in="SourceGraphic" />
-          </feMerge>
-        </filter>
-        <radialGradient id="coreGrad" cx="50%" cy="50%" r="50%">
-          <stop offset="0%" stopColor="#ffffff" stopOpacity="1" />
-          <stop offset="40%" stopColor="#00f0ff" stopOpacity="0.9" />
-          <stop offset="100%" stopColor="#0040ff" stopOpacity="0.2" />
-        </radialGradient>
-        <radialGradient id="ringGrad" cx="50%" cy="50%" r="50%">
-          <stop offset="0%" stopColor="#00f0ff" stopOpacity="0.8" />
-          <stop offset="100%" stopColor="#0080ff" stopOpacity="0.2" />
-        </radialGradient>
-      </defs>
+// Concentric ring radii for the Arc Reactor background pattern
+const REACTOR_RINGS = [18, 30, 42, 54];
 
-      {/* Outer decorative ring — spins slowly */}
-      <g className="reactor-outer-ring" style={{ transformOrigin: '100px 100px' }}>
-        {/* Tick marks */}
-        {Array.from({ length: 24 }).map((_, i) => {
-          const angle = (i * 360) / 24;
-          const rad = (angle * Math.PI) / 180;
-          const r1 = 88, r2 = i % 3 === 0 ? 96 : 93;
-          return (
-            <line
-              key={i}
-              x1={100 + r1 * Math.cos(rad)}
-              y1={100 + r1 * Math.sin(rad)}
-              x2={100 + r2 * Math.cos(rad)}
-              y2={100 + r2 * Math.sin(rad)}
-              stroke={i % 3 === 0 ? '#00f0ff' : '#00a0cc'}
-              strokeWidth={i % 3 === 0 ? 2 : 1}
-              strokeOpacity={i % 3 === 0 ? 1 : 0.5}
-            />
-          );
-        })}
-        {/* Outer circle */}
-        <circle cx="100" cy="100" r="90" fill="none" stroke="#00f0ff" strokeWidth="1.5" strokeOpacity="0.4" />
-        <circle cx="100" cy="100" r="84" fill="none" stroke="#00f0ff" strokeWidth="0.5" strokeOpacity="0.2" />
-      </g>
+// Outer reactor segments (dividing the circle into 10 parts)
+const SEGMENTS = Array.from({ length: 10 }, (_, i) => {
+  const angle = (i * 36 * Math.PI) / 180;
+  return {
+    x1: 50,
+    y1: 50,
+    x2: 50 + Math.cos(angle) * 44,
+    y2: 50 + Math.sin(angle) * 44,
+  };
+});
 
-      {/* Hexagonal housing */}
-      <polygon
-        points="100,28 156,63 156,137 100,172 44,137 44,63"
-        fill="rgba(0, 10, 30, 0.85)"
-        stroke="#00f0ff"
-        strokeWidth="2"
-        filter="url(#reactorGlow)"
-      />
-      <polygon
-        points="100,36 150,67 150,133 100,164 50,133 50,67"
-        fill="rgba(0, 20, 60, 0.6)"
-        stroke="#00c0ee"
-        strokeWidth="1"
-        strokeOpacity="0.5"
-      />
-
-      {/* Inner triangle blades — spin reverse */}
-      <g className="reactor-inner-ring" style={{ transformOrigin: '100px 100px' }}>
-        {[0, 120, 240].map((angle, i) => {
-          const rad = (angle * Math.PI) / 180;
-          const cos = Math.cos(rad);
-          const sin = Math.sin(rad);
-          // Blade: from center outward
-          const tip = { x: 100 + 50 * cos, y: 100 + 50 * sin };
-          const left = { x: 100 + 12 * Math.cos(rad + Math.PI / 2), y: 100 + 12 * Math.sin(rad + Math.PI / 2) };
-          const right = { x: 100 + 12 * Math.cos(rad - Math.PI / 2), y: 100 + 12 * Math.sin(rad - Math.PI / 2) };
-          return (
-            <polygon
-              key={i}
-              points={`${tip.x},${tip.y} ${left.x},${left.y} ${right.x},${right.y}`}
-              fill="url(#ringGrad)"
-              stroke="#00f0ff"
-              strokeWidth="1"
-              filter="url(#reactorGlow)"
-            />
-          );
-        })}
-      </g>
-
-      {/* Inner ring */}
-      <circle cx="100" cy="100" r="28" fill="rgba(0,30,80,0.8)" stroke="#00f0ff" strokeWidth="2" />
-      <circle cx="100" cy="100" r="22" fill="rgba(0,50,120,0.6)" stroke="#00d0ff" strokeWidth="1" />
-
-      {/* Core glow */}
-      <circle cx="100" cy="100" r="14" fill="url(#coreGrad)" filter="url(#reactorGlow)" />
-      <circle cx="100" cy="100" r="8" fill="white" opacity="0.95" filter="url(#reactorGlow)" />
-    </svg>
-  );
+function generateParticles(count) {
+  return Array.from({ length: count }, (_, i) => ({
+    id: i,
+    x: Math.random() * 100,
+    y: Math.random() * 100,
+    size: Math.random() * 3 + 1.5,
+    duration: Math.random() * 2.5 + 1.5,
+    delay: Math.random() * 1.5,
+    color: Math.random() > 0.5 ? '#00f0ff' : '#d4af37',
+  }));
 }
 
-/* ─────────────────────────────────────────────────────────────────────────────
-   PRELOADER COMPONENT
-───────────────────────────────────────────────────────────────────────────── */
-function Preloader({ onComplete }) {
-  const [phase, setPhase] = useState('enter'); // 'enter' | 'visible' | 'exit'
-  const [progress, setProgress] = useState(0);
-  const [statusText, setStatusText] = useState('INITIALIZING STARK SYSTEMS...');
-  const intervalRef = useRef(null);
+const particles = generateParticles(25);
 
-  const statusMessages = [
-    'INITIALIZING STARK SYSTEMS...',
-    'LOADING ARC REACTOR CORE...',
-    'CALIBRATING HUD INTERFACE...',
-    'CONNECTING TO JARVIS...',
-    'STARK TECH ONLINE.',
-  ];
+export function Preloader({ onComplete }) {
+  const [progress, setProgress] = useState(0);
+  const [show, setShow] = useState(true);
+
+  const handleComplete = useCallback(() => {
+    setTimeout(() => setShow(false), 400);
+    setTimeout(onComplete, 1200);
+  }, [onComplete]);
 
   useEffect(() => {
-    // Progress counter
-    let count = 0;
-    intervalRef.current = setInterval(() => {
-      count += 2;
-      setProgress(Math.min(count, 100));
+    const interval = setInterval(() => {
+      setProgress((prev) => {
+        if (prev >= 100) {
+          clearInterval(interval);
+          handleComplete();
+          return 100;
+        }
+        return prev + 1;
+      });
+    }, 25);
+    return () => clearInterval(interval);
+  }, [handleComplete]);
 
-      // Cycle status messages
-      const msgIndex = Math.min(Math.floor(count / 22), statusMessages.length - 1);
-      setStatusText(statusMessages[msgIndex]);
-
-      if (count >= 100) {
-        clearInterval(intervalRef.current);
-        // Brief pause at 100% then exit
-        setTimeout(() => {
-          setPhase('exit');
-          setTimeout(() => onComplete?.(), 900);
-        }, 600);
-      }
-    }, 30);
-
-    return () => clearInterval(intervalRef.current);
-  }, []);
+  // Rising mask calculation for the core reactor charging effect
+  const fillY = 64 - (progress / 100) * 64;
 
   return (
-    <div
-      className={cn(
-        'preloader-overlay stark-grid-bg',
-        phase === 'exit' && 'exit'
-      )}
-    >
-      {/* Scan line */}
-      <div className="scan-line" />
-
-      {/* Corner decorations */}
-      <div className="absolute top-6 left-6 w-16 h-16 border-t-2 border-l-2 border-arc-cyan/60" />
-      <div className="absolute top-6 right-6 w-16 h-16 border-t-2 border-r-2 border-arc-cyan/60" />
-      <div className="absolute bottom-6 left-6 w-16 h-16 border-b-2 border-l-2 border-arc-cyan/60" />
-      <div className="absolute bottom-6 right-6 w-16 h-16 border-b-2 border-r-2 border-arc-cyan/60" />
-
-      {/* Main content */}
-      <div className="flex flex-col items-center gap-8 z-10">
-
-        {/* Arc Reactor */}
-        <div className="relative">
-          <ArcReactorSVG />
-          {/* Outer glow rings */}
-          <div className="absolute inset-0 rounded-full bg-arc-cyan/5 blur-3xl scale-150 animate-pulse-slow" />
-        </div>
-
-        {/* Stark Logo Text */}
-        <div className="text-center space-y-1">
-          <div className="font-orbitron text-xs tracking-[0.4em] text-arc-cyan/70 uppercase">
-            Stark Industries
-          </div>
-          <h1 className="font-orbitron text-2xl font-black tracking-[0.2em] text-white text-shadow-cyan uppercase">
-            IRON MAN
-          </h1>
-          <div className="font-rajdhani text-sm tracking-[0.3em] gradient-text-gold uppercase font-semibold">
-            Stark Tech
-          </div>
-        </div>
-
-        {/* Progress bar */}
-        <div className="w-72 space-y-3">
-          {/* Status text */}
-          <div className="font-orbitron text-xs text-arc-cyan/80 tracking-widest text-center hud-flicker">
-            {statusText}
+    <AnimatePresence>
+      {show && (
+        <motion.div
+          key="preloader"
+          initial={{ opacity: 1 }}
+          exit={{ opacity: 0, scale: 1.08 }}
+          transition={{ duration: 0.8, ease: 'easeInOut' }}
+          className="fixed inset-0 z-[9999] flex flex-col items-center justify-center overflow-hidden"
+          style={{
+            background:
+              'radial-gradient(ellipse at 50% 40%, #3a080d 0%, #1c0205 40%, #0c0102 80%, #020000 100%)',
+          }}
+        >
+          {/* ── Outer Tech Scanline ── */}
+          <div className="absolute inset-0 pointer-events-none overflow-hidden z-20">
+            <div className="scan-line opacity-40" />
           </div>
 
-          {/* Bar track */}
-          <div className="relative h-1 bg-white/10 rounded-full overflow-hidden">
-            <div
-              className="absolute inset-y-0 left-0 bg-gradient-to-r from-arc-cyan via-arc-cyan to-arc-cyan-dim rounded-full transition-all duration-75"
-              style={{ width: `${progress}%` }}
+          {/* ═══════ HOLOGRAPHIC TECH WEB BACKGROUND ═══════ */}
+          <motion.svg
+            viewBox="0 0 100 100"
+            className="absolute inset-0 w-full h-full opacity-[0.06] z-0"
+            initial={{ rotate: 0 }}
+            animate={{ rotate: 360 }}
+            transition={{ duration: 180, repeat: Infinity, ease: 'linear' }}
+          >
+            {/* Concentric reactor tracks */}
+            {REACTOR_RINGS.map((r, i) => (
+              <motion.circle
+                key={`ring-${i}`}
+                cx="50"
+                cy="50"
+                r={r}
+                fill="none"
+                stroke="white"
+                strokeWidth="0.15"
+                strokeDasharray="3 3"
+                initial={{ pathLength: 0, opacity: 0 }}
+                animate={{ pathLength: 1, opacity: 1 }}
+                transition={{
+                  duration: 1.8,
+                  delay: 0.2 + i * 0.2,
+                  ease: 'easeOut',
+                }}
+              />
+            ))}
+
+            {/* Radial segments */}
+            {SEGMENTS.map((seg, i) => (
+              <motion.line
+                key={`seg-${i}`}
+                x1={seg.x1}
+                y1={seg.y1}
+                x2={seg.x2}
+                y2={seg.y2}
+                stroke="white"
+                strokeWidth="0.12"
+                initial={{ pathLength: 0 }}
+                animate={{ pathLength: 1 }}
+                transition={{ duration: 1.4, delay: i * 0.08, ease: 'easeOut' }}
+              />
+            ))}
+          </motion.svg>
+
+          {/* ═══════ FLOATING NANOTECH GLOW PARTICLES ═══════ */}
+          {particles.map((p) => (
+            <motion.div
+              key={p.id}
+              className="absolute rounded-full"
+              style={{
+                left: `${p.x}%`,
+                top: `${p.y}%`,
+                width: p.size,
+                height: p.size,
+                background: `radial-gradient(circle, ${p.color} 0%, transparent 80%)`,
+                boxShadow: `0 0 10px ${p.color}`,
+              }}
+              animate={{
+                y: [0, -40, 0],
+                x: [0, Math.random() > 0.5 ? 20 : -20, 0],
+                opacity: [0, 0.7, 0],
+                scale: [0, 1.4, 0],
+              }}
+              transition={{
+                duration: p.duration,
+                delay: p.delay,
+                repeat: Infinity,
+                ease: 'easeInOut',
+              }}
             />
-            {/* Shimmer */}
-            <div
-              className="absolute inset-y-0 w-8 bg-gradient-to-r from-transparent via-white/40 to-transparent"
-              style={{ left: `${Math.max(progress - 8, 0)}%`, transition: 'left 0.075s' }}
-            />
-          </div>
+          ))}
 
-          {/* Percentage */}
-          <div className="flex justify-between items-center">
-            <div className="font-orbitron text-xs text-white/30 tracking-widest">SYS.BOOT</div>
-            <div className="font-orbitron text-sm font-bold text-arc-cyan text-shadow-cyan">
-              {progress.toString().padStart(3, '0')}%
+          {/* ═══════ PULSING REACTOR CORE GLOW ═══════ */}
+          <motion.div
+            className="absolute w-80 h-80 rounded-full pointer-events-none z-10"
+            style={{
+              background:
+                'radial-gradient(circle, rgba(0,240,255,0.08) 0%, transparent 70%)',
+            }}
+            animate={{ scale: [1, 1.3, 1], opacity: [0.4, 0.7, 0.4] }}
+            transition={{ duration: 2.5, repeat: Infinity, ease: 'easeInOut' }}
+          />
+
+          {/* ═══════ GLOWING ARC REACTOR CORE INTERFACE ═══════ */}
+          <motion.div
+            className="relative z-20 flex flex-col items-center"
+            initial={{ scale: 0.8, opacity: 0 }}
+            animate={{ scale: 1, opacity: 1 }}
+            transition={{
+              type: 'spring',
+              stiffness: 120,
+              damping: 15,
+              duration: 1,
+            }}
+          >
+            {/* The Arc Reactor Outer Circular HUD */}
+            <div className="relative w-64 h-64 md:w-72 md:h-72 flex items-center justify-center">
+              <svg
+                xmlns="http://www.w3.org/2000/svg"
+                viewBox="0 0 64 64"
+                className="w-full h-full"
+                style={{
+                  filter: `drop-shadow(0 0 ${8 + progress * 0.25}px rgba(0, 240, 255, ${0.3 + progress * 0.007}))`,
+                }}
+              >
+                <defs>
+                  {/* Charging progress mask */}
+                  <mask id="reactor-fill-mask">
+                    <rect
+                      x="0"
+                      y={fillY}
+                      width="64"
+                      height="64"
+                      fill="white"
+                      style={{ transition: 'y 0.1s ease-out' }}
+                    />
+                  </mask>
+
+                  {/* Core cyan charging gradient */}
+                  <linearGradient id="cyan-gradient" x1="0" y1="1" x2="0" y2="0">
+                    <stop offset="0%" stopColor="#0055ff" />
+                    <stop offset="60%" stopColor="#00f0ff" />
+                    <stop offset="100%" stopColor="#ffffff" />
+                  </linearGradient>
+                </defs>
+
+                {/* Background Silent Outlines */}
+                <circle cx="32" cy="32" r="28" fill="none" stroke="rgba(255,255,255,0.06)" strokeWidth="1.5" />
+                <circle cx="32" cy="32" r="22" fill="none" stroke="rgba(255,255,255,0.06)" strokeWidth="1" />
+                <circle cx="32" cy="32" r="14" fill="none" stroke="rgba(255,255,255,0.06)" strokeWidth="1.5" strokeDasharray="2 2" />
+
+                {/* Charging progress ring core */}
+                <circle
+                  cx="32"
+                  cy="32"
+                  r="22"
+                  fill="none"
+                  stroke="url(#cyan-gradient)"
+                  strokeWidth="2.5"
+                  mask="url(#reactor-fill-mask)"
+                />
+
+                {/* Inner active energy core */}
+                <circle
+                  cx="32"
+                  cy="32"
+                  r="10"
+                  fill="url(#cyan-gradient)"
+                  mask="url(#reactor-fill-mask)"
+                />
+
+                {/* 10 Triangular Ring Blades */}
+                {Array.from({ length: 10 }).map((_, i) => {
+                  const angle = (i * 36 - 90) * Math.PI / 180;
+                  const x = 32 + Math.cos(angle) * 22;
+                  const y = 32 + Math.sin(angle) * 22;
+                  return (
+                    <circle
+                      key={i}
+                      cx={x}
+                      cy={y}
+                      r="1.8"
+                      fill={progress > (i * 10) ? '#00f0ff' : 'rgba(255,255,255,0.1)'}
+                      stroke="rgba(0, 240, 255, 0.4)"
+                      strokeWidth="0.4"
+                      className="transition-all duration-300"
+                    />
+                  );
+                })}
+
+                {/* Clean HUD geometric lines */}
+                <circle cx="32" cy="32" r="28" fill="none" stroke="rgba(0,240,255,0.15)" strokeWidth="0.5" />
+              </svg>
+
+              {/* Central Text HUD readout */}
+              <div className="absolute inset-0 flex flex-col items-center justify-center text-center">
+                <div className="font-orbitron text-[10px] text-white/40 tracking-[0.2em] font-bold">SYSTEM</div>
+                <div className="font-orbitron text-xl md:text-2xl font-black text-white text-shadow-cyan my-0.5">
+                  {progress.toString().padStart(3, '0')}%
+                </div>
+                <div className="font-rajdhani text-[9px] text-stark-gold font-bold tracking-widest uppercase">CHARGING CORE</div>
+              </div>
             </div>
-          </div>
-        </div>
+          </motion.div>
 
-        {/* Bottom classification text */}
-        <div className="font-rajdhani text-xs text-white/20 tracking-[0.5em] uppercase text-center">
-          CLASSIFIED — STARK INDUSTRIES INTERNAL
-        </div>
-      </div>
-    </div>
+          {/* ═══════ HOLOGRAPHIC HUD FRAME CORNERS ═══════ */}
+          <motion.div
+            className="absolute top-6 left-6 w-12 h-12 border-t-2 border-l-2 border-arc-cyan/20 rounded-tl-lg"
+            initial={{ opacity: 0, scale: 0.8 }}
+            animate={{ opacity: 1, scale: 1 }}
+            transition={{ delay: 0.3, duration: 0.6 }}
+          />
+          <motion.div
+            className="absolute top-6 right-6 w-12 h-12 border-t-2 border-r-2 border-arc-cyan/20 rounded-tr-lg"
+            initial={{ opacity: 0, scale: 0.8 }}
+            animate={{ opacity: 1, scale: 1 }}
+            transition={{ delay: 0.4, duration: 0.6 }}
+          />
+          <motion.div
+            className="absolute bottom-6 left-6 w-12 h-12 border-b-2 border-l-2 border-arc-cyan/20 rounded-bl-lg"
+            initial={{ opacity: 0, scale: 0.8 }}
+            animate={{ opacity: 1, scale: 1 }}
+            transition={{ delay: 0.5, duration: 0.6 }}
+          />
+          <motion.div
+            className="absolute bottom-6 right-6 w-12 h-12 border-b-2 border-r-2 border-arc-cyan/20 rounded-br-lg"
+            initial={{ opacity: 0, scale: 0.8 }}
+            animate={{ opacity: 1, scale: 1 }}
+            transition={{ delay: 0.6, duration: 0.6 }}
+          />
+
+          {/* ═══════ BOTTOM SHIMMER PROGRESS LINE ═══════ */}
+          <div className="absolute bottom-0 left-0 right-0 h-[3px] bg-white/5 z-30">
+            <motion.div
+              className="h-full"
+              style={{
+                width: `${progress}%`,
+                background: 'linear-gradient(90deg, #0055ff, #00f0ff, #ffffff)',
+                boxShadow: '0 0 15px rgba(0,240,255,0.8)',
+              }}
+              transition={{ ease: 'easeOut' }}
+            />
+          </div>
+        </motion.div>
+      )}
+    </AnimatePresence>
   );
 }
 
